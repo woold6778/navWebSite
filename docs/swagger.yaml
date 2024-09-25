@@ -1,0 +1,1529 @@
+basePath: /api/v1
+definitions:
+  admin.LoginSuccessData:
+    properties:
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+  mydb.StructAdmin:
+    properties:
+      avatar:
+        description: 用户头像
+        type: string
+      createTime:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      lastLoginTime:
+        type: integer
+      password:
+        type: string
+      phoneNumber:
+        type: string
+      role:
+        type: string
+      salt:
+        type: string
+      status:
+        type: integer
+      updateTime:
+        type: integer
+      username:
+        type: string
+    type: object
+  mydb.StructNav:
+    properties:
+      admin_id:
+        description: 管理员id
+        type: integer
+      class_id:
+        description: 分类id
+        type: integer
+      create_time:
+        description: 创建时间
+        type: integer
+      description:
+        description: 描述
+        type: string
+      icon:
+        description: 图标
+        type: string
+      id:
+        description: id
+        type: integer
+      is_recommend:
+        description: 是否推荐
+        type: boolean
+      is_show:
+        description: 是否显示
+        type: boolean
+      keywords:
+        description: 关键词
+        type: string
+      sort:
+        description: 排序
+        type: integer
+      status:
+        description: 状态:0=禁用,1=启用
+        type: integer
+      subtitle:
+        description: 副标题
+        type: string
+      title:
+        description: 标题
+        type: string
+      update_time:
+        description: 更新时间
+        type: integer
+      url:
+        description: 链接地址
+        type: string
+      views:
+        description: 浏览量
+        type: integer
+    type: object
+  mydb.StructNavClass:
+    properties:
+      admin_id:
+        description: 管理员id
+        type: integer
+      create_time:
+        description: 创建时间
+        type: integer
+      description:
+        description: 描述
+        type: string
+      icon:
+        description: 图标
+        type: string
+      id:
+        description: id
+        type: integer
+      is_hot:
+        description: 是否热门
+        type: boolean
+      is_recommend:
+        description: 是否推荐
+        type: boolean
+      is_show:
+        description: 是否显示
+        type: boolean
+      name:
+        description: 导航分类名称
+        type: string
+      parent_id:
+        description: 父级分类id
+        type: integer
+      sort:
+        description: 排序
+        type: integer
+      status:
+        description: 状态:0=禁用,1=启用
+        type: integer
+      update_time:
+        description: 更新时间
+        type: integer
+    type: object
+  mydb.StructNews:
+    properties:
+      admin_id:
+        type: integer
+      author:
+        type: string
+      class_id:
+        type: integer
+      comment_count:
+        type: integer
+      content:
+        description: 文章内容
+        type: string
+      create_time:
+        type: integer
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_headline:
+        description: 是否头条
+        type: boolean
+      is_hot:
+        description: 是否热门
+        type: boolean
+      is_recommended:
+        description: 是否推荐
+        type: boolean
+      is_show:
+        type: boolean
+      keywords:
+        type: string
+      language:
+        default: cn
+        description: 文章使用的语言
+        type: string
+      sort:
+        type: integer
+      source:
+        type: string
+      status:
+        type: integer
+      subtitle:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  mydb.StructNewsClass:
+    properties:
+      admin_id:
+        description: 管理员id
+        type: integer
+      create_time:
+        description: 创建时间
+        type: integer
+      description:
+        description: 描述
+        type: string
+      icon:
+        description: 图标
+        type: string
+      id:
+        description: id
+        type: integer
+      is_hot:
+        description: 是否热门
+        type: boolean
+      is_recommend:
+        description: 是否推荐
+        type: boolean
+      is_show:
+        description: 是否显示
+        type: boolean
+      keywords:
+        description: 关键词
+        type: string
+      name:
+        description: 新闻分类名称
+        type: string
+      parent_id:
+        description: 父级分类id
+        type: integer
+      sort:
+        description: 排序
+        type: integer
+      status:
+        description: 状态:0=禁用,1=启用
+        type: integer
+      update_time:
+        description: 更新时间
+        type: integer
+    type: object
+  upload.ImgReturnData:
+    properties:
+      hash:
+        type: string
+      img_path:
+        type: string
+    type: object
+  util.APIResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+host: nav.fandoc.org
+info:
+  contact: {}
+  description: This is a sample server for a nav web site.
+  title: Nav Web Site API
+  version: "1.0"
+paths:
+  /admin/delete/{id}:
+    delete:
+      description: 根据用户ID删除用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 删除用户
+      tags:
+      - admin
+  /admin/detail/{id}:
+    get:
+      description: 根据用户ID获取用户的详细信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/mydb.StructAdmin'
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取用户详情
+      tags:
+      - admin
+  /admin/editProfile/{id}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据用户ID编辑用户的资料
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 邮箱地址
+        in: formData
+        name: email
+        type: string
+      - description: 手机号
+        in: formData
+        name: phone_number
+        type: string
+      - description: 用户头像
+        in: formData
+        name: avatar
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 编辑用户资料
+      tags:
+      - admin
+  /admin/list:
+    get:
+      description: 获取所有用户的列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/mydb.StructAdmin'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取用户列表
+      tags:
+      - admin
+  /admin/login:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 管理员登录
+      parameters:
+      - description: 用户名
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: 登录密码(进行过1次MD5的密码)
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: 过期时间(分钟), 默认120分钟
+        in: formData
+        name: expiration
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/admin.LoginSuccessData'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: 无效的过期时间参数
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "401":
+          description: 用户名或密码错误
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 查询管理员信息失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 管理员登录
+      tags:
+      - admin
+  /admin/register:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 通过接收前端传递的参数，注册一个新的管理员账户
+      parameters:
+      - description: 用户名
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: 密码
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: 邮箱地址
+        in: formData
+        name: email
+        type: string
+      - description: 手机号
+        in: formData
+        name: phone_number
+        type: string
+      - description: 用户头像
+        in: formData
+        name: avatar
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "400":
+          description: 无效的参数
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 注册失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 注册新管理员
+      tags:
+      - admin
+  /admin/updatePassword/{id}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据用户ID修改用户的密码
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 新密码
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 修改用户密码
+      tags:
+      - admin
+  /nav/addClass:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 添加新的导航分类
+      parameters:
+      - description: 导航分类名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 导航分类描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 添加导航分类
+      tags:
+      - nav
+  /nav/addData:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 添加新的导航信息数据
+      parameters:
+      - description: 导航名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 导航链接
+        in: formData
+        name: url
+        required: true
+        type: string
+      - description: 导航描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 添加导航信息数据
+      tags:
+      - nav
+  /nav/deleteClass/{id}:
+    delete:
+      description: 根据导航分类ID删除导航分类
+      parameters:
+      - description: 导航分类ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 删除导航分类
+      tags:
+      - nav
+  /nav/deleteData/{id}:
+    delete:
+      description: 根据导航信息ID删除导航信息数据
+      parameters:
+      - description: 导航信息ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 删除导航信息数据
+      tags:
+      - nav
+  /nav/getClassList:
+    get:
+      description: 获取所有导航分类的列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/mydb.StructNavClass'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 获取导航分类列表
+      tags:
+      - nav
+  /nav/getDetail/{id}:
+    get:
+      description: 根据导航信息ID获取导航信息详情
+      parameters:
+      - description: 导航信息ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/mydb.StructNav'
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 获取导航信息详情
+      tags:
+      - nav
+  /nav/getList:
+    get:
+      description: 获取所有导航信息的列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/mydb.StructNav'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 获取导航信息列表
+      tags:
+      - nav
+  /nav/updateClass/{id}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据导航分类ID修改导航分类信息
+      parameters:
+      - description: 导航分类ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 导航分类名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 导航分类描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 修改导航分类
+      tags:
+      - nav
+  /nav/updateData/{id}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据导航信息ID修改导航信息数据
+      parameters:
+      - description: 导航信息ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 导航名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 导航链接
+        in: formData
+        name: url
+        required: true
+        type: string
+      - description: 导航描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: string
+                message:
+                  type: string
+              type: object
+      summary: 修改导航信息数据
+      tags:
+      - nav
+  /news/add:
+    post:
+      consumes:
+      - application/json
+      description: 添加一条新的新闻记录
+      parameters:
+      - description: 新闻内容
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/mydb.StructNews'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻添加成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 添加新闻失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 添加新闻
+      tags:
+      - news
+  /news/addClass:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 添加新的新闻分类
+      parameters:
+      - description: 新闻分类名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 新闻分类描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻分类添加成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 添加新闻分类失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 添加新闻分类
+      tags:
+      - news
+  /news/delete/{id}:
+    delete:
+      description: 根据新闻ID删除新闻
+      parameters:
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻删除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 删除新闻失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 删除新闻
+      tags:
+      - news
+  /news/deleteClass/{id}:
+    delete:
+      description: 根据新闻分类ID删除新闻分类
+      parameters:
+      - description: 新闻分类ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻分类删除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 删除新闻分类失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 删除新闻分类
+      tags:
+      - news
+  /news/detail/{id}:
+    get:
+      description: 根据新闻ID获取新闻详情
+      parameters:
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取新闻详情成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/mydb.StructNews'
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 获取新闻详情失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取新闻详情
+      tags:
+      - news
+  /news/getClassDetail/{id}:
+    get:
+      description: 根据新闻分类ID获取新闻分类详情
+      parameters:
+      - description: 新闻分类ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取新闻分类详情成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/mydb.StructNewsClass'
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 获取新闻分类详情失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取新闻分类详情
+      tags:
+      - news
+  /news/getClassList:
+    get:
+      description: 获取所有新闻分类的列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取新闻分类列表成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/mydb.StructNewsClass'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 获取新闻分类列表失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取新闻分类列表
+      tags:
+      - news
+  /news/list:
+    get:
+      description: 获取新闻列表，支持按分类ID筛选
+      parameters:
+      - description: 新闻分类ID
+        in: query
+        name: class_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取新闻列表成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/mydb.StructNews'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 获取新闻列表失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 获取新闻列表
+      tags:
+      - news
+  /news/update:
+    put:
+      consumes:
+      - application/json
+      description: 根据新闻ID编辑新闻内容
+      parameters:
+      - description: 新闻内容
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/mydb.StructNews'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻编辑成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 编辑新闻失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 编辑新闻
+      tags:
+      - news
+  /news/updateClass/{id}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据新闻分类ID修改新闻分类信息
+      parameters:
+      - description: 新闻分类ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 新闻分类名称
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: 新闻分类描述
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新闻分类修改成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: 修改新闻分类失败
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 修改新闻分类
+      tags:
+      - news
+  /upload/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传图片文件
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/upload.ImgReturnData'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.APIResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  type: object
+                message:
+                  type: string
+              type: object
+      summary: 上传图片
+      tags:
+      - upload
+swagger: "2.0"

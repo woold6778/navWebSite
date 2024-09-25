@@ -1,0 +1,22 @@
+base:
+  debug: true
+
+mysql:
+  host: "127.0.0.1"
+  port: 3306
+  username: "nav_web_site"
+  password: "w2JAWas6PByWmZpG"
+  database: "nav_web_site"
+  table_prefix: "ba_"
+  MaxOpenConns: 50  # 最大打开连接数
+  MaxIdleConns: 25  # 最大空闲连接数
+  ConnMaxLifetime: 5  # 连接的最大生命周期（分钟）
+  
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: "Shifd123!"
+  db: 0
+
+base_url:
+  ad_pic_url: "https://ad.cdnpic.cc"
