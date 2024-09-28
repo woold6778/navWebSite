@@ -47,6 +47,11 @@ func main() {
 
 	// Swagger 路由配置
 	r.GET("/swagger/*any", SwaggerAuthMiddleware(), ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// 图片获取模块组
+	imageGroup := r.Group("/images")
+	{
+		imageGroup.GET("/:hash", upload.GetImageByHash)
+	}
 
 	v1 := r.Group("/api/v1")
 
@@ -167,7 +172,7 @@ func main() {
 		// @Param body body nav.UpdateClassRequest true "更新导航分类请求"
 		// @Success 200 {object} nav.UpdateClassResponse
 		// @Router /nav/updateClass [put]
-		navGroup.PUT("/updateClass", nav.UpdateClass) // 更新导航分类
+		navGroup.PUT("/updateClass/:id", nav.UpdateClass) // 更新导航分类
 
 		// @Summary 添加导航信息数据
 		// @Description 添加导航信息数据
@@ -194,7 +199,7 @@ func main() {
 		// @Param id path string true "导航信息ID"
 		// @Success 200 {object} nav.Data
 		// @Router /nav/getDetail/{id} [get]
-		navGroup.GET("/getDetail", nav.GetDataDetail) // 获取信息详情
+		navGroup.GET("/getDetail/:id", nav.GetDataDetail) // 获取信息详情
 
 		// @Summary 更新导航数据
 		// @Description 根据导航信息ID更新导航数据
@@ -204,12 +209,57 @@ func main() {
 		// @Param body body nav.UpdateDataRequest true "更新导航数据请求"
 		// @Success 200 {object} nav.UpdateDataResponse
 		// @Router /nav/updateData [put]
-		navGroup.PUT("/updateData", nav.UpdateData) // 更新导航数据
+		navGroup.PUT("/updateData/:id", nav.UpdateData) // 更新导航数据
 	}
 
 	//新闻模块路由组
 	newsGroup := v1.Group("/news")
 	{
+		// @Summary 添加新闻分类
+		// @Description 添加新闻分类
+		// @Tags news
+		// @Accept json
+		// @Produce json
+		// @Param body body news.AddClassRequest true "添加新闻分类请求"
+		// @Success 200 {object} news.AddClassResponse
+		// @Router /news/addClass [post]
+		newsGroup.POST("/addClass", news.AddClass) // 添加新闻分类
+
+		// @Summary 编辑新闻分类
+		// @Description 根据新闻分类ID编辑新闻分类
+		// @Tags news
+		// @Accept json
+		// @Produce json
+		// @Param body body news.UpdateClassRequest true "编辑新闻分类请求"
+		// @Success 200 {object} news.UpdateClassResponse
+		// @Router /news/updateClass/{id} [put]
+		newsGroup.PUT("/updateClass/:id", news.UpdateClass) // 编辑新闻分类
+
+		// @Summary 删除新闻分类
+		// @Description 根据新闻分类ID删除新闻分类
+		// @Tags news
+		// @Produce json
+		// @Param id path string true "新闻分类ID"
+		// @Success 200 {object} gin.H{"message": string}
+		// @Router /news/deleteClass/{id} [delete]
+		newsGroup.DELETE("/deleteClass/:id", news.DeleteClass) // 删除新闻分类
+
+		// @Summary 获取新闻分类列表
+		// @Description 获取所有新闻分类的列表
+		// @Tags news
+		// @Produce json
+		// @Success 200 {object} []news.Class
+		// @Router /news/getClassList [get]
+		newsGroup.GET("/getClassList", news.GetClassList) // 获取新闻分类列表
+
+		// @Summary 获取新闻分类详情
+		// @Description 根据新闻分类ID获取新闻分类详情
+		// @Tags news
+		// @Produce json
+		// @Param id path string true "新闻分类ID"
+		// @Success 200 {object} news.GetClassDetail
+		// @Router /news/getClassDetail/{id} [get]
+		newsGroup.GET("/getClassDetail/:id", news.GetClassDetail) // 获取新闻分类详情
 		// @Summary 添加新闻
 		// @Description 添加新闻
 		// @Tags news
@@ -235,7 +285,7 @@ func main() {
 		// @Param id path string true "新闻ID"
 		// @Success 200 {object} news.News
 		// @Router /news/detail/{id} [get]
-		newsGroup.GET("/detail", news.GetNewsDetail) // 获取新闻详情
+		newsGroup.GET("/detail/:id", news.GetNewsDetail) // 获取新闻详情
 
 		// @Summary 更新新闻
 		// @Description 根据新闻ID更新新闻内容
@@ -245,7 +295,7 @@ func main() {
 		// @Param body body news.UpdateNewsRequest true "更新新闻请求"
 		// @Success 200 {object} news.UpdateNewsResponse
 		// @Router /news/update [put]
-		newsGroup.PUT("/update", news.UpdateNews) // 更新新闻
+		newsGroup.PUT("/update/:id", news.UpdateNews) // 更新新闻
 
 		// @Summary 删除新闻
 		// @Description 根据新闻ID删除新闻
@@ -254,7 +304,7 @@ func main() {
 		// @Param id path string true "新闻ID"
 		// @Success 200 {object} gin.H{"message": string}
 		// @Router /news/delete/{id} [delete]
-		newsGroup.DELETE("/delete", news.DeleteNews) // 删除新闻
+		newsGroup.DELETE("/delete/:id", news.DeleteNews) // 删除新闻
 	}
 
 	// 默认路由处理

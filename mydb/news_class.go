@@ -50,7 +50,7 @@ func (s *StructNewsClass) GetTableName() string {
 // 获取插入数据时的必填字段
 func (s *StructNewsClass) GetRequiredFields() []string {
 	return []string{
-		"Title",
+		"Name",
 		"Sort",
 		"Is_show",
 		"Status",

@@ -53,49 +53,31 @@ func (s *StructNews) GetRequiredFields() []string {
 func (s StructNews) GetUniqueFields() []string {
 	return []string{"Title", "Source"}
 }
+func (s StructNewsContent) GetUniqueFields() []string {
+	return []string{}
+}
 
 // find 方法查询 news 表的单条数据，返回的数据要包括news_content表里面的content字段
 func (s *StructNews) Find(condition string) (StructNews, error) {
 	// 构建带前后缀的表名
-	fullTableName := fmt.Sprintf("%s%s%s", config.Config.MySQL.TablePrefix, s.GetTableName(), "")
+	//fullTableName := fmt.Sprintf("%s%s%s", config.Config.MySQL.TablePrefix, s.GetTableName(), "")
 	var item StructNews
-	query := fmt.Sprintf("SELECT * FROM %s WHERE %s", fullTableName, condition)
-	result, err := Db.Query(query)
+
+	// 使用StructNews.Select查询news表的数据
+	params := QueryParams{
+		Condition: condition,
+		Page:      1,
+		PageSize:  1,
+	}
+	newsList, _, err := s.Select(params)
 	if err != nil {
 		return item, util.WrapError(err, "查询失败:")
 	}
-	defer result.Close()
 
-	if result.Next() {
-		err := result.Scan(
-			&item.ID,
-			&item.Admin_id,
-			&item.Class_id,
-			&item.Title,
-			&item.Subtitle,
-			&item.Url,
-			&item.Description,
-			&item.Icon,
-			&item.Keywords,
-			&item.Sort,
-			&item.Is_show,
-			&item.Status,
-			&item.Create_time,
-			&item.Author,
-			&item.Source,
-			&item.View_count,
-			&item.Comment_count,
-			&item.Language,
-			&item.Is_hot,
-			&item.Is_headline,
-			&item.Is_recommended,
-		)
-		if err != nil {
-			return item, util.WrapError(err, "扫描记录失败:")
-		}
+	if len(newsList) > 0 {
+		item = newsList[0]
 
 		// 查询 news_content 表中的内容
-		// 构建带前后缀的表名
 		fullTableName_content := fmt.Sprintf("%s%s%s", config.Config.MySQL.TablePrefix, "news_content", "")
 		contentQuery := fmt.Sprintf("SELECT content FROM %s WHERE news_id = %d", fullTableName_content, item.ID)
 		contentResult, err := Db.Query(contentQuery)
@@ -146,19 +128,45 @@ func (s *StructNews) Select(params QueryParams) ([]StructNews, int, error) {
 	return list, 0, nil
 }
 
-// Insert 方法插入新的 news 记录
+// Insert 方法插入新的 news 记录,如果有content就能插入news_content表，否在就把content拿掉
 func (s *StructNews) Insert(datas []StructNews) (int, []int64, error) {
-	count, ids, err := GenericInsert(
-		s.GetTableName(),
-		datas,
-		s.GetRequiredFields(),
-		config.Config.MySQL.TablePrefix,
-		"",
-	)
-	if err != nil {
-		return 0, ids, err
+	var ids []int64
+	for i, data := range datas {
+		// 插入 news 表
+		_, tempIds, err := GenericInsert(
+			s.GetTableName(),
+			[]StructNews{data},
+			s.GetRequiredFields(),
+			config.Config.MySQL.TablePrefix,
+			"",
+		)
+		if err != nil {
+			return 0, ids, err
+		}
+		ids = append(ids, tempIds...)
+
+		// 如果有 content 字段，插入 news_content 表
+		if data.Content != "" {
+			contentData := StructNewsContent{
+				NewsID:  int(tempIds[0]),
+				Content: data.Content,
+			}
+			_, _, err := GenericInsert(
+				"news_content",
+				[]StructNewsContent{contentData},
+				[]string{"NewsID", "Content"},
+				config.Config.MySQL.TablePrefix,
+				"",
+			)
+			if err != nil {
+				return 0, ids, err
+			}
+		} else {
+			// 如果没有 content 字段，移除 content
+			datas[i].Content = ""
+		}
 	}
-	return count, ids, nil
+	return len(ids), ids, nil
 }
 
 // Update 方法更新 news 记录
@@ -172,6 +180,54 @@ func (s *StructNews) Update(datas []StructNews, condition string) (int, []int64,
 	)
 	if err != nil {
 		return 0, ids, err
+	}
+
+	for _, data := range datas {
+		if data.Content != "" {
+			contentData := StructNewsContent{
+				NewsID:  data.ID,
+				Content: data.Content,
+			}
+			// 先判断news_id对应的content是否存在
+			existingContent, err := GenericSelect(
+				Db,
+				"news_content",
+				QueryParams{
+					Condition: fmt.Sprintf("news_id = %d", data.ID),
+				},
+				config.Config.MySQL.TablePrefix,
+				"",
+			)
+			if err != nil {
+				return 0, ids, err
+			}
+
+			if len(existingContent) > 0 {
+				// 如果存在就更新
+				_, _, err := GenericUpdate(
+					"news_content",
+					[]StructNewsContent{contentData},
+					fmt.Sprintf("news_id = %d", data.ID),
+					config.Config.MySQL.TablePrefix,
+					"",
+				)
+				if err != nil {
+					return 0, ids, err
+				}
+			} else {
+				// 否则就用GenericInsert新增
+				_, _, err := GenericInsert(
+					"news_content",
+					[]StructNewsContent{contentData},
+					[]string{"NewsID", "Content"},
+					config.Config.MySQL.TablePrefix,
+					"",
+				)
+				if err != nil {
+					return 0, ids, err
+				}
+			}
+		}
 	}
 	return count, ids, nil
 }
@@ -187,6 +243,20 @@ func (s *StructNews) Delete(condition string) (int, []int64, error) {
 	if err != nil {
 		return 0, ids, err
 	}
+
+	// 同步删除 news_content 表中的对应数据
+	for _, id := range ids {
+		_, _, err := GenericDelete(
+			"news_content",
+			fmt.Sprintf("news_id = %d", id),
+			config.Config.MySQL.TablePrefix,
+			"",
+		)
+		if err != nil {
+			return 0, ids, err
+		}
+	}
+
 	return count, ids, nil
 }
 

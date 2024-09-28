@@ -28,6 +28,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "用户ID",
                         "name": "id",
                         "in": "path",
@@ -97,6 +104,13 @@ const docTemplate = `{
                 ],
                 "summary": "获取用户详情",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "用户ID",
@@ -171,6 +185,13 @@ const docTemplate = `{
                 ],
                 "summary": "编辑用户资料",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "用户ID",
@@ -259,6 +280,27 @@ const docTemplate = `{
                     "admin"
                 ],
                 "summary": "获取用户列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -276,7 +318,22 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/mydb.StructAdmin"
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/definitions/mydb.StructAdmin"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "password": {
+                                                                "type": "string"
+                                                            },
+                                                            "salt": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                ]
                                             }
                                         },
                                         "message": {
@@ -588,6 +645,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "用户ID",
                         "name": "id",
                         "in": "path",
@@ -693,10 +757,60 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "导航分类名称",
                         "name": "name",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "父级分类id",
+                        "name": "parent_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -770,22 +884,78 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "导航名称",
-                        "name": "name",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分类id",
+                        "name": "class_id",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "导航链接",
+                        "description": "标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "副标题",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "链接地址",
                         "name": "url",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "导航描述",
+                        "description": "描述",
                         "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
                         "in": "formData"
                     }
                 ],
@@ -1198,10 +1368,58 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "导航分类名称",
                         "name": "name",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "父级分类id",
+                        "name": "parent_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -1275,29 +1493,85 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "导航信息ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "导航名称",
-                        "name": "name",
+                        "type": "integer",
+                        "description": "分类id",
+                        "name": "class_id",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "导航链接",
+                        "description": "标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "副标题",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "链接地址",
                         "name": "url",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "导航描述",
+                        "description": "描述",
                         "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
                         "in": "formData"
                     }
                 ],
@@ -1354,7 +1628,7 @@ const docTemplate = `{
             "post": {
                 "description": "添加一条新的新闻记录",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -1365,13 +1639,116 @@ const docTemplate = `{
                 "summary": "添加新闻",
                 "parameters": [
                     {
-                        "description": "新闻内容",
-                        "name": "news",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mydb.StructNews"
-                        }
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分类ID",
+                        "name": "class_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "副标题",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "链接",
+                        "name": "url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "描述",
+                        "name": "description",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "作者",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "来源",
+                        "name": "source",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "语言",
+                        "name": "language",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否头条",
+                        "name": "is_headline",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommended",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "内容",
+                        "name": "content",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -1466,15 +1843,70 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "新闻分类名称",
                         "name": "name",
                         "in": "formData",
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "父级分类id",
+                        "name": "parent_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
                         "type": "string",
-                        "description": "新闻分类描述",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "描述",
                         "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
                         "in": "formData"
                     }
                 ],
@@ -1824,6 +2256,20 @@ const docTemplate = `{
                     "news"
                 ],
                 "summary": "获取新闻分类列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "获取新闻分类列表成功",
@@ -1895,6 +2341,18 @@ const docTemplate = `{
                         "description": "新闻分类ID",
                         "name": "class_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1952,11 +2410,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/news/update": {
+        "/news/update/{id}": {
             "put": {
                 "description": "根据新闻ID编辑新闻内容",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -1967,13 +2425,122 @@ const docTemplate = `{
                 "summary": "编辑新闻",
                 "parameters": [
                     {
-                        "description": "新闻内容",
-                        "name": "news",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mydb.StructNews"
-                        }
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "新闻ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分类ID",
+                        "name": "class_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "副标题",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "链接地址",
+                        "name": "url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "描述",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "作者",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "来源",
+                        "name": "source",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "语言",
+                        "name": "language",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否头条",
+                        "name": "is_headline",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommended",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "内容",
+                        "name": "content",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -2068,6 +2635,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "新闻分类ID",
                         "name": "id",
                         "in": "path",
@@ -2081,9 +2655,57 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "父级分类id",
+                        "name": "parent_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "排序",
+                        "name": "sort",
+                        "in": "formData"
+                    },
+                    {
                         "type": "string",
-                        "description": "新闻分类描述",
+                        "description": "图标",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "描述",
                         "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词",
+                        "name": "keywords",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否显示",
+                        "name": "is_show",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否推荐",
+                        "name": "is_recommend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否热门",
+                        "name": "is_hot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态:0=禁用,1=启用",
+                        "name": "status",
                         "in": "formData"
                     }
                 ],

@@ -4,6 +4,7 @@ import (
 	"nav-web-site/mydb"
 	"nav-web-site/util"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,16 +14,44 @@ import (
 // @Description 获取所有用户的列表
 // @Tags admin
 // @Produce application/json
-// @Success 200 {object} util.APIResponse{code=int,message=string,data=[]mydb.StructAdmin}
+// @Param LoginToken header string true "认证Token"
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} util.APIResponse{code=int,message=string,data=[]mydb.StructAdmin{password=string,salt=string}}
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Router /admin/list [get]
 func GetUserList(c *gin.Context) {
-	params := mydb.QueryParams{}
+	loginToken := c.GetHeader("LoginToken")
+	_, err := GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限进行此操作", Data: err.Error()})
+		return
+	}
+
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil || page <= 0 {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.Query("page_size"))
+	if err != nil || pageSize <= 0 {
+		pageSize = 20
+	}
+	params := mydb.QueryParams{
+		Page:     page,
+		PageSize: pageSize,
+	}
 	users, _, err := mydb.Tables.Admin.Select(params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "获取用户列表失败", Data: err.Error()})
 		return
 	}
+
+	// 移除password和salt字段
+	for i := range users {
+		users[i].Password = ""
+		users[i].Salt = ""
+	}
+
 	c.JSON(http.StatusOK, util.APIResponse{Code: -1, Message: "获取用户列表成功", Data: users})
 }
 
@@ -31,11 +60,19 @@ func GetUserList(c *gin.Context) {
 // @Description 根据用户ID获取用户的详细信息
 // @Tags admin
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param id path string true "用户ID"
 // @Success 200 {object} util.APIResponse{code=int,message=string,data=mydb.StructAdmin}
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Router /admin/detail/{id} [get]
 func GetUserDetail(c *gin.Context) {
+	loginToken := c.GetHeader("LoginToken")
+	_, err := GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限进行此操作", Data: err.Error()})
+		return
+	}
+
 	userID := c.Param("id")
 	params := mydb.QueryParams{
 		Condition: "id=" + userID,
@@ -45,6 +82,8 @@ func GetUserDetail(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "获取用户详情失败", Data: err.Error()})
 		return
 	}
+	user.Password = ""
+	user.Salt = ""
 	c.JSON(http.StatusOK, util.APIResponse{Code: http.StatusOK, Message: "获取用户详情成功", Data: user})
 }
 
@@ -54,6 +93,7 @@ func GetUserDetail(c *gin.Context) {
 // @Tags admin
 // @Accept application/x-www-form-urlencoded
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param id path string true "用户ID"
 // @Param password formData string true "新密码"
 // @Success 200 {object} util.APIResponse{code=int,message=string,data=interface{}}
@@ -61,6 +101,13 @@ func GetUserDetail(c *gin.Context) {
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Router /admin/updatePassword/{id} [put]
 func UpdateUserPassword(c *gin.Context) {
+	loginToken := c.GetHeader("LoginToken")
+	_, err := GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限进行此操作", Data: err.Error()})
+		return
+	}
+
 	userID := c.Param("id")
 	newPassword := c.PostForm("password")
 	if newPassword == "" {
@@ -90,6 +137,7 @@ func UpdateUserPassword(c *gin.Context) {
 // @Tags admin
 // @Accept application/x-www-form-urlencoded
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param id path string true "用户ID"
 // @Param email formData string false "邮箱地址"
 // @Param phone_number formData string false "手机号"
@@ -98,6 +146,13 @@ func UpdateUserPassword(c *gin.Context) {
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Router /admin/editProfile/{id} [put]
 func EditUserProfile(c *gin.Context) {
+	loginToken := c.GetHeader("LoginToken")
+	_, err := GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限进行此操作", Data: err.Error()})
+		return
+	}
+
 	userID := c.Param("id")
 	user, err := mydb.Tables.Admin.Find(mydb.QueryParams{Condition: "id=" + userID})
 	if err != nil {
@@ -123,11 +178,19 @@ func EditUserProfile(c *gin.Context) {
 // @Description 根据用户ID删除用户
 // @Tags admin
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param id path string true "用户ID"
 // @Success 200 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=interface{}}
 // @Router /admin/delete/{id} [delete]
 func DeleteUser(c *gin.Context) {
+	loginToken := c.GetHeader("LoginToken")
+	_, err := GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限进行此操作", Data: err.Error()})
+		return
+	}
+
 	userID := c.Param("id")
 	user, err := mydb.Tables.Admin.Find(mydb.QueryParams{Condition: "id=" + userID})
 	if err != nil {

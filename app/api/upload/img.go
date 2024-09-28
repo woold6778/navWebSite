@@ -9,6 +9,7 @@ import (
 	"nav-web-site/mydb"
 	"nav-web-site/util"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -112,6 +113,35 @@ func UploadImage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "插入文件记录失败", Data: "null"})
 		return
 	}
-	img_return_data := ImgReturnData{Hash: hash, ImgPath: "/images/" + fileName}
+	img_return_data := ImgReturnData{Hash: hash, ImgPath: "/images/" + hash}
 	c.JSON(http.StatusOK, util.APIResponse{Code: http.StatusOK, Message: "文件上传成功", Data: img_return_data})
+}
+
+// GetImageByHash 根据哈希值获取图片
+func GetImageByHash(c *gin.Context) {
+	hash := c.Param("hash")
+
+	// 查询文件记录
+	var uploadFile mydb.StructUploadFile
+	params := mydb.QueryParams{
+		Condition: fmt.Sprintf("hash='%s'", hash),
+	}
+	existingFile, err := uploadFile.Find(params)
+	if err != nil {
+		c.JSON(http.StatusNotFound, util.APIResponse{Code: http.StatusNotFound, Message: "图片未找到", Data: "null"})
+		return
+	}
+
+	// 读取图片文件
+	filePath := existingFile.FilePath
+	file, err := os.Open(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "读取图片文件失败", Data: "null"})
+		return
+	}
+	defer file.Close()
+
+	// 返回图片文件
+	c.Header("Content-Type", "image/jpeg")
+	c.File(filePath)
 }

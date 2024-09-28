@@ -1,6 +1,7 @@
 package nav
 
 import (
+	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
 	"net/http"
@@ -15,17 +16,46 @@ import (
 // @Tags nav
 // @Accept application/x-www-form-urlencoded
 // @Produce application/json
-// @Param name formData string true "导航名称"
-// @Param url formData string true "导航链接"
-// @Param description formData string false "导航描述"
+// @Param LoginToken header string true "认证Token"
+// @Param class_id formData int true "分类id"
+// @Param title formData string true "标题"
+// @Param subtitle formData string false "副标题"
+// @Param url formData string true "链接地址"
+// @Param description formData string false "描述"
+// @Param icon formData string false "图标"
+// @Param keywords formData string false "关键词"
+// @Param sort formData int false "排序"
+// @Param is_show formData bool false "是否显示"
+// @Param is_recommend formData bool false "是否推荐"
+// @Param status formData int false "状态:0=禁用,1=启用"
 // @Success 200 {object} util.APIResponse{code=int,message=string}
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=string}
 // @Router /nav/addData [post]
 func AddData(c *gin.Context) {
 	var data mydb.StructNav
-	data.Title = c.PostForm("name")
+
+	loginToken := c.GetHeader("LoginToken")
+	adminID, err := admin.GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限添加导航", Data: err.Error()})
+		return
+	}
+
+	data.Admin_id = adminID
+
+	data.Class_id, _ = strconv.Atoi(c.PostForm("class_id"))
+	data.Title = c.PostForm("title")
+	data.Subtitle = c.PostForm("subtitle")
 	data.Url = c.PostForm("url")
 	data.Description = c.PostForm("description")
+	data.Icon = c.PostForm("icon")
+	data.Keywords = c.PostForm("keywords")
+	data.Sort, _ = strconv.Atoi(c.PostForm("sort"))
+	data.Is_show, _ = strconv.ParseBool(c.PostForm("is_show"))
+	data.Is_recommend, _ = strconv.ParseBool(c.PostForm("is_recommend"))
+	data.Status, _ = strconv.Atoi(c.PostForm("status"))
+	data.Create_time = util.GetTimestamp(10)
+	data.Update_time = util.GetTimestamp(10)
 
 	id, rowsAffected, err := data.Insert([]mydb.StructNav{data})
 	if err != nil {
@@ -43,10 +73,19 @@ func AddData(c *gin.Context) {
 // @Tags nav
 // @Accept application/x-www-form-urlencoded
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param id path string true "导航信息ID"
-// @Param name formData string true "导航名称"
-// @Param url formData string true "导航链接"
-// @Param description formData string false "导航描述"
+// @Param class_id formData int true "分类id"
+// @Param title formData string true "标题"
+// @Param subtitle formData string false "副标题"
+// @Param url formData string true "链接地址"
+// @Param description formData string false "描述"
+// @Param icon formData string false "图标"
+// @Param keywords formData string false "关键词"
+// @Param sort formData int false "排序"
+// @Param is_show formData bool false "是否显示"
+// @Param is_recommend formData bool false "是否推荐"
+// @Param status formData int false "状态:0=禁用,1=启用"
 // @Success 200 {object} util.APIResponse{code=int,message=string}
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=string}
 // @Router /nav/updateData/{id} [put]
@@ -58,9 +97,52 @@ func UpdateData(c *gin.Context) {
 		return
 	}
 
-	data.Title = c.PostForm("name")
-	data.Url = c.PostForm("url")
-	data.Description = c.PostForm("description")
+	loginToken := c.GetHeader("LoginToken")
+	adminID, err := admin.GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "未授权操作", Data: err.Error()})
+		return
+	}
+
+	if data.Admin_id != adminID {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限修改该导航", Data: "null"})
+		return
+	}
+
+	if c.PostForm("class_id") != "" {
+		data.Class_id, _ = strconv.Atoi(c.PostForm("class_id"))
+	}
+	if c.PostForm("title") != "" {
+		data.Title = c.PostForm("title")
+	}
+	if c.PostForm("subtitle") != "" {
+		data.Subtitle = c.PostForm("subtitle")
+	}
+	if c.PostForm("url") != "" {
+		data.Url = c.PostForm("url")
+	}
+	if c.PostForm("description") != "" {
+		data.Description = c.PostForm("description")
+	}
+	if c.PostForm("icon") != "" {
+		data.Icon = c.PostForm("icon")
+	}
+	if c.PostForm("keywords") != "" {
+		data.Keywords = c.PostForm("keywords")
+	}
+	if c.PostForm("sort") != "" {
+		data.Sort, _ = strconv.Atoi(c.PostForm("sort"))
+	}
+	if c.PostForm("is_show") != "" {
+		data.Is_show, _ = strconv.ParseBool(c.PostForm("is_show"))
+	}
+	if c.PostForm("is_recommend") != "" {
+		data.Is_recommend, _ = strconv.ParseBool(c.PostForm("is_recommend"))
+	}
+	if c.PostForm("status") != "" {
+		data.Status, _ = strconv.Atoi(c.PostForm("status"))
+	}
+	data.Update_time = util.GetTimestamp(10)
 
 	_, _, err = data.Update([]mydb.StructNav{data}, "id="+strconv.Itoa(data.ID))
 	if err != nil {

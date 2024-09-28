@@ -252,6 +252,11 @@ paths:
     delete:
       description: 根据用户ID删除用户
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 用户ID
         in: path
         name: id
@@ -293,6 +298,11 @@ paths:
     get:
       description: 根据用户ID获取用户的详细信息
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 用户ID
         in: path
         name: id
@@ -336,6 +346,11 @@ paths:
       - application/x-www-form-urlencoded
       description: 根据用户ID编辑用户的资料
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 用户ID
         in: path
         name: id
@@ -388,6 +403,20 @@ paths:
   /admin/list:
     get:
       description: 获取所有用户的列表
+      parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -401,7 +430,14 @@ paths:
                   type: integer
                 data:
                   items:
-                    $ref: '#/definitions/mydb.StructAdmin'
+                    allOf:
+                    - $ref: '#/definitions/mydb.StructAdmin'
+                    - properties:
+                        password:
+                          type: string
+                        salt:
+                          type: string
+                      type: object
                   type: array
                 message:
                   type: string
@@ -579,6 +615,11 @@ paths:
       - application/x-www-form-urlencoded
       description: 根据用户ID修改用户的密码
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 用户ID
         in: path
         name: id
@@ -640,11 +681,45 @@ paths:
       - application/x-www-form-urlencoded
       description: 添加新的导航分类
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 导航分类名称
         in: formData
         name: name
         required: true
         type: string
+      - description: 父级分类id
+        in: formData
+        name: parent_id
+        required: true
+        type: integer
+      - description: 排序
+        in: formData
+        name: sort
+        type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       - description: 导航分类描述
         in: formData
         name: description
@@ -685,20 +760,58 @@ paths:
       - application/x-www-form-urlencoded
       description: 添加新的导航信息数据
       parameters:
-      - description: 导航名称
-        in: formData
-        name: name
+      - description: 认证Token
+        in: header
+        name: LoginToken
         required: true
         type: string
-      - description: 导航链接
+      - description: 分类id
+        in: formData
+        name: class_id
+        required: true
+        type: integer
+      - description: 标题
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: 副标题
+        in: formData
+        name: subtitle
+        type: string
+      - description: 链接地址
         in: formData
         name: url
         required: true
         type: string
-      - description: 导航描述
+      - description: 描述
         in: formData
         name: description
         type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       produces:
       - application/json
       responses:
@@ -933,11 +1046,43 @@ paths:
         name: id
         required: true
         type: string
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 导航分类名称
         in: formData
         name: name
-        required: true
         type: string
+      - description: 父级分类id
+        in: formData
+        name: parent_id
+        type: integer
+      - description: 排序
+        in: formData
+        name: sort
+        type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       - description: 导航分类描述
         in: formData
         name: description
@@ -978,25 +1123,63 @@ paths:
       - application/x-www-form-urlencoded
       description: 根据导航信息ID修改导航信息数据
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 导航信息ID
         in: path
         name: id
         required: true
         type: string
-      - description: 导航名称
+      - description: 分类id
         in: formData
-        name: name
+        name: class_id
+        required: true
+        type: integer
+      - description: 标题
+        in: formData
+        name: title
         required: true
         type: string
-      - description: 导航链接
+      - description: 副标题
+        in: formData
+        name: subtitle
+        type: string
+      - description: 链接地址
         in: formData
         name: url
         required: true
         type: string
-      - description: 导航描述
+      - description: 描述
         in: formData
         name: description
         type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       produces:
       - application/json
       responses:
@@ -1030,15 +1213,85 @@ paths:
   /news/add:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: 添加一条新的新闻记录
       parameters:
-      - description: 新闻内容
-        in: body
-        name: news
+      - description: 认证Token
+        in: header
+        name: LoginToken
         required: true
-        schema:
-          $ref: '#/definitions/mydb.StructNews'
+        type: string
+      - description: 分类ID
+        in: formData
+        name: class_id
+        required: true
+        type: integer
+      - description: 标题
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: 副标题
+        in: formData
+        name: subtitle
+        type: string
+      - description: 链接
+        in: formData
+        name: url
+        type: string
+      - description: 描述
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 状态
+        in: formData
+        name: status
+        type: integer
+      - description: 作者
+        in: formData
+        name: author
+        type: string
+      - description: 来源
+        in: formData
+        name: source
+        type: string
+      - description: 语言
+        in: formData
+        name: language
+        type: string
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 是否头条
+        in: formData
+        name: is_headline
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommended
+        type: boolean
+      - description: 内容
+        in: formData
+        name: content
+        type: string
       produces:
       - application/json
       responses:
@@ -1090,15 +1343,52 @@ paths:
       - application/x-www-form-urlencoded
       description: 添加新的新闻分类
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 新闻分类名称
         in: formData
         name: name
         required: true
         type: string
-      - description: 新闻分类描述
+      - description: 父级分类id
+        in: formData
+        name: parent_id
+        type: integer
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 描述
         in: formData
         name: description
         type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       produces:
       - application/json
       responses:
@@ -1298,6 +1588,15 @@ paths:
   /news/getClassList:
     get:
       description: 获取所有新闻分类的列表
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -1340,6 +1639,14 @@ paths:
         in: query
         name: class_id
         type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -1374,18 +1681,92 @@ paths:
       summary: 获取新闻列表
       tags:
       - news
-  /news/update:
+  /news/update/{id}:
     put:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: 根据新闻ID编辑新闻内容
       parameters:
-      - description: 新闻内容
-        in: body
-        name: news
+      - description: 认证Token
+        in: header
+        name: LoginToken
         required: true
-        schema:
-          $ref: '#/definitions/mydb.StructNews'
+        type: string
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分类ID
+        in: formData
+        name: class_id
+        required: true
+        type: integer
+      - description: 标题
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: 副标题
+        in: formData
+        name: subtitle
+        type: string
+      - description: 链接地址
+        in: formData
+        name: url
+        type: string
+      - description: 描述
+        in: formData
+        name: description
+        type: string
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 状态
+        in: formData
+        name: status
+        type: integer
+      - description: 作者
+        in: formData
+        name: author
+        type: string
+      - description: 来源
+        in: formData
+        name: source
+        type: string
+      - description: 语言
+        in: formData
+        name: language
+        type: string
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 是否头条
+        in: formData
+        name: is_headline
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommended
+        type: boolean
+      - description: 内容
+        in: formData
+        name: content
+        type: string
       produces:
       - application/json
       responses:
@@ -1437,6 +1818,11 @@ paths:
       - application/x-www-form-urlencoded
       description: 根据新闻分类ID修改新闻分类信息
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 新闻分类ID
         in: path
         name: id
@@ -1447,10 +1833,42 @@ paths:
         name: name
         required: true
         type: string
-      - description: 新闻分类描述
+      - description: 父级分类id
+        in: formData
+        name: parent_id
+        type: integer
+      - description: 排序
+        in: formData
+        name: sort
+        type: integer
+      - description: 图标
+        in: formData
+        name: icon
+        type: string
+      - description: 描述
         in: formData
         name: description
         type: string
+      - description: 关键词
+        in: formData
+        name: keywords
+        type: string
+      - description: 是否显示
+        in: formData
+        name: is_show
+        type: boolean
+      - description: 是否推荐
+        in: formData
+        name: is_recommend
+        type: boolean
+      - description: 是否热门
+        in: formData
+        name: is_hot
+        type: boolean
+      - description: 状态:0=禁用,1=启用
+        in: formData
+        name: status
+        type: integer
       produces:
       - application/json
       responses:

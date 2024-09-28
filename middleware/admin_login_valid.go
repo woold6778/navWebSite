@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/util"
 	"net/http"
 
@@ -20,12 +21,18 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 获取请求头中的 logintoken
-		token := c.GetHeader("logintoken")
+		token := c.GetHeader("LoginToken")
 
 		// 检查 logintoken 是否存在并且有效
-		if token == "" || !isValidToken(c, token) {
-			// 如果 token 无效，返回 401 未授权
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or missing logintoken"})
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing logintoken"})
+			c.Abort() // 终止请求
+			return
+		}
+
+		isValid, errMsg := isValidToken(c, token)
+		if !isValid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid logintoken: " + errMsg})
 			c.Abort() // 终止请求
 			return
 		}
@@ -36,31 +43,30 @@ func AuthMiddleware() gin.HandlerFunc {
 }
 
 // 用于检查 token 的有效性
-func isValidToken(c *gin.Context, token string) bool {
-	//在缓存在查找是否有key="admin_login_token_" + token的内容
-	cacheKey := "admin_login_token_" + token
-
-	// 获取缓存的值
-	cacheValue, found := util.C.Get(cacheKey)
-	if !found {
-		return false
+func isValidToken(c *gin.Context, token string) (bool, string) {
+	tokenContent, err := admin.GetTokenContent(token)
+	if err != nil {
+		return false, err.Error()
 	}
-
-	// 断言缓存值的类型
-	cacheData, ok := cacheValue.(map[string]interface{})
-	if !ok {
-		return false
-	}
+	util.InfoLogger.Println(tokenContent)
 
 	// 获取请求的客户端IP、User-Agent和设备指纹
 	clientIP := c.ClientIP()
 	userAgent := c.Request.UserAgent()
-	deviceFingerprint := util.GenerateDeviceFingerprint(c.Request)
+	//deviceFingerprint := util.GenerateDeviceFingerprint(c.Request)
 
 	// 验证缓存中的客户端信息
-	if cacheData["client_ip"] != clientIP || cacheData["user_agent"] != userAgent || cacheData["device_fingerprint"] != deviceFingerprint {
-		return false
+	if tokenContent["client_ip"] != clientIP {
+		return false, "Client IP mismatch"
 	}
+	if tokenContent["user_agent"] != userAgent {
+		return false, "User-Agent mismatch"
+	}
+	/*
+		if tokenContent["device_fingerprint"] != deviceFingerprint {
+			return false, "Device fingerprint mismatch"
+		}
+	*/
 
-	return found
+	return true, "ok"
 }

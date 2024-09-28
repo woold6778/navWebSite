@@ -41,7 +41,12 @@ func GenericSelect(db *sql.DB, tableName string, params QueryParams, tablePrefix
 	// 构建带前后缀的表名
 	fullTableName := fmt.Sprintf("%s%s%s", tablePrefix, tableName, tableSuffix)
 	// 构建 SQL 查询语句
-	query := fmt.Sprintf("SELECT * FROM %s WHERE %s", fullTableName, params.Condition)
+	var query string
+	if params.Condition != "" {
+		query = fmt.Sprintf("SELECT * FROM %s WHERE %s", fullTableName, params.Condition)
+	} else {
+		query = fmt.Sprintf("SELECT * FROM %s", fullTableName)
+	}
 
 	// 如果有排序条件，添加 ORDER BY 子句
 	if params.OrderBy != "" {
@@ -60,8 +65,8 @@ func GenericSelect(db *sql.DB, tableName string, params QueryParams, tablePrefix
 		}
 	}
 
-	// 打印构建的查询语句
-	fmt.Println("Constructed Query:", query)
+	// 使用util.InfoLogger写入日志
+	util.InfoLogger.Println("Constructed Query:", query)
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -137,13 +142,20 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 	var insertedIDs []int64
 	var nextID = int64(0)
 	var err error
+
+	// 获取数据库表的字段名称列表
+	tableColumns, err := getTableColumns(fullTableName)
+	if err != nil {
+		return 0, nil, util.WrapError(err, "获取表字段名称失败:")
+	}
+
 	// 将datas转换为[]interface{}
 	interfaceDatas := make([]interface{}, len(datas))
 	for i, v := range datas {
 		//如果必须字段（在变量requiredFields里面）没有有效值就报错
 		for _, field := range requiredFields {
 			value := reflect.ValueOf(v).FieldByName(field)
-			if !value.IsValid() || value.IsZero() {
+			if !value.IsValid() || (value.Kind() != reflect.Int && value.IsZero()) {
 				return 0, nil, util.WrapError(fmt.Errorf("必填字段 %s 缺失或为空值", field), "")
 			}
 		}
@@ -151,15 +163,18 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		// 检查是否已存在相同的记录
 		uniqueFieldGetter, ok := interface{}(v).(UniqueFieldGetter)
 		if !ok {
-			return 0, nil, util.WrapError(fmt.Errorf("类型 %T 没有实现 UniqueFieldGetter 接口", v), "")
-		}
-		uniqueFields := uniqueFieldGetter.GetUniqueFields()
-		exists, err := CheckExistingRecord(Db, v, uniqueFields, tableName, tablePrefix, tableSuffix)
-		if err != nil {
-			return 0, nil, util.WrapError(err, "检查记录是否存在时发生错误:")
-		}
-		if exists {
-			continue // 如果记录已存在，跳过此条数据
+			util.ErrorLogger.Println("类型转换失败: 无法将", v, "转换为UniqueFieldGetter")
+		} else {
+			uniqueFields := uniqueFieldGetter.GetUniqueFields()
+			if len(uniqueFields) > 0 {
+				exists, err := CheckExistingRecord(Db, v, uniqueFields, tableName, tablePrefix, tableSuffix)
+				if err != nil {
+					return 0, nil, util.WrapError(err, "检查记录是否存在时发生错误:")
+				}
+				if exists {
+					continue // 如果记录已存在，跳过此条数据
+				}
+			}
 		}
 		// 检测T里面的ID的数据类型
 		idField := reflect.ValueOf(&v).Elem().FieldByName("ID")
@@ -182,6 +197,7 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		insertedIDs = append(insertedIDs, nextID) //返回的ID列表
 	}
 
+	util.InfoLogger.Println("移除nil值前的interfaceDatas:", interfaceDatas)
 	// 移除interfaceDatas中的nil值
 	validInterfaceDatas := make([]interface{}, 0)
 	for _, data := range interfaceDatas {
@@ -190,7 +206,8 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		}
 	}
 	interfaceDatas = validInterfaceDatas
-	sql, valueArgs, err := GenerateInsertSQL(fullTableName, interfaceDatas)
+	util.InfoLogger.Println("interfaceDatas的内容:", interfaceDatas)
+	sql, valueArgs, err := GenerateInsertSQL(fullTableName, interfaceDatas, tableColumns)
 	if err != nil {
 		return 0, nil, util.WrapError(err, "生成SQL失败:")
 	}
@@ -219,6 +236,7 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 
 // GenericUpdate 批量更新数据的通用函数
 func GenericUpdate[T any](tableName string, datas []T, condition string, tablePrefix string, tableSuffix string) (int, []int64, error) {
+
 	// 设置默认值
 	if tablePrefix == "" {
 		tablePrefix = config.Config.MySQL.TablePrefix
@@ -228,6 +246,13 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 	}
 	// 构建带前后缀的表名
 	fullTableName := fmt.Sprintf("%s%s%s", tablePrefix, tableName, tableSuffix)
+
+	// 获取数据库表格的字段名
+	tableColumns, err := getTableColumns(fullTableName)
+	if err != nil {
+		return 0, nil, util.WrapError(err, "获取数据库表格字段名失败:")
+	}
+	util.InfoLogger.Println("数据表"+fullTableName+"字段名列表:", tableColumns)
 
 	// 将数据转换为 []interface{}
 	interfaceDatas := interfaceSlice(datas)
@@ -244,12 +269,20 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 	for i := 0; i < val.NumField(); i++ {
 		field := typeOfS.Field(i)
 		dbTag := field.Tag.Get("db")
-		if dbTag != "" {
-			columns = append(columns, dbTag)
-		} else {
-			columns = append(columns, typeOfS.Field(i).Name)
+		fieldValue := val.Field(i).Interface()
+		if fieldValue != nil {
+			if dbTag != "" {
+				if contains(tableColumns, dbTag) {
+					columns = append(columns, dbTag)
+				}
+			} else {
+				if contains(tableColumns, typeOfS.Field(i).Name) {
+					columns = append(columns, typeOfS.Field(i).Name)
+				}
+			}
 		}
 	}
+	util.InfoLogger.Println("更新数据字段列表:", columns)
 
 	// 生成更新SQL
 	var setClauses []string
@@ -260,12 +293,36 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 			val = val.Elem()
 		}
 
+		util.InfoLogger.Printf("val的内容: %+v\n", val.Interface())
+
 		var setClause []string
-		for i := 0; i < val.NumField(); i++ {
-			setClause = append(setClause, fmt.Sprintf("%s = ?", columns[i]))
-			valueArgs = append(valueArgs, val.Field(i).Interface())
+		for _, column := range columns {
+			var fieldValue reflect.Value
+			for i := 0; i < val.NumField(); i++ {
+				field := val.Type().Field(i)
+				dbTag := field.Tag.Get("db")
+				if dbTag == column || field.Name == column {
+					fieldValue = val.Field(i)
+					break
+				}
+			}
+			if !fieldValue.IsValid() {
+				util.ErrorLogger.Printf("字段 %s 无效\n", column)
+				continue
+			}
+			util.InfoLogger.Printf("字段: %s, 值: %v\n", column, fieldValue.Interface())
+			setClause = append(setClause, fmt.Sprintf("%s = ?", column))
+			valueArgs = append(valueArgs, fieldValue.Interface())
 		}
-		setClauses = append(setClauses, strings.Join(setClause, ", "))
+		if len(setClause) > 0 {
+			setClauses = append(setClauses, strings.Join(setClause, ", "))
+		}
+	}
+
+	if len(setClauses) == 0 {
+		err := fmt.Errorf("没有有效的字段用于更新")
+		util.ErrorLogger.Println("生成的Update SQL语句失败:", err)
+		return 0, nil, util.WrapError(err, "生成的Update SQL语句失败:")
 	}
 
 	updateSQL := fmt.Sprintf("UPDATE %s SET %s WHERE %s",
@@ -390,7 +447,7 @@ func interfaceSlice[T any](slice []T) []interface{} {
 }
 
 // GenerateInsertSQL 生成插入多条数据的SQL语句
-func GenerateInsertSQL(tableName string, datas []interface{}) (string, []interface{}, error) {
+func GenerateInsertSQL(tableName string, datas []interface{}, tableColumns []string) (string, []interface{}, error) {
 	if len(datas) == 0 {
 		return "", nil, util.WrapError(fmt.Errorf("数据数组为空"), "")
 	}
@@ -408,9 +465,15 @@ func GenerateInsertSQL(tableName string, datas []interface{}) (string, []interfa
 		field := typeOfS.Field(i)
 		dbTag := field.Tag.Get("db")
 		if dbTag != "" {
-			columns = append(columns, dbTag)
+			// 仅添加数据库表中存在的字段
+			if contains(tableColumns, dbTag) {
+				columns = append(columns, dbTag)
+			}
 		} else {
-			columns = append(columns, typeOfS.Field(i).Name)
+			// 仅添加数据库表中存在的字段
+			if contains(tableColumns, typeOfS.Field(i).Name) {
+				columns = append(columns, typeOfS.Field(i).Name)
+			}
 		}
 
 	}
@@ -426,8 +489,15 @@ func GenerateInsertSQL(tableName string, datas []interface{}) (string, []interfa
 
 		var values []string
 		for i := 0; i < val.NumField(); i++ {
-			values = append(values, "?")
-			valueArgs = append(valueArgs, val.Field(i).Interface())
+			field := typeOfS.Field(i)
+			dbTag := field.Tag.Get("db")
+			if dbTag != "" && contains(tableColumns, dbTag) {
+				values = append(values, "?")
+				valueArgs = append(valueArgs, val.Field(i).Interface())
+			} else if contains(tableColumns, field.Name) {
+				values = append(values, "?")
+				valueArgs = append(valueArgs, val.Field(i).Interface())
+			}
 		}
 		valueStrings = append(valueStrings, fmt.Sprintf("(%s)", strings.Join(values, ", ")))
 	}
@@ -438,4 +508,34 @@ func GenerateInsertSQL(tableName string, datas []interface{}) (string, []interfa
 		strings.Join(valueStrings, ", "))
 
 	return insertSQL, valueArgs, nil
+}
+
+// 获取数据库表的字段名称列表
+func getTableColumns(tableName string) ([]string, error) {
+	query := fmt.Sprintf("SHOW COLUMNS FROM %s", tableName)
+	rows, err := Db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var columns []string
+	for rows.Next() {
+		var field, _type, _null, _key, _default, _extra sql.NullString
+		if err := rows.Scan(&field, &_type, &_null, &_key, &_default, &_extra); err != nil {
+			return nil, err
+		}
+		columns = append(columns, field.String)
+	}
+	return columns, nil
+}
+
+// 检查切片中是否包含某个值
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }
