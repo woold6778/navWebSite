@@ -5,14 +5,20 @@ import (
 	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/app/api/v1/nav"
 	"nav-web-site/app/api/v1/news"
+	"nav-web-site/app/webcrawler"
 	"nav-web-site/config"
 	"nav-web-site/middleware"
 	"nav-web-site/mydb"
-	"nav-web-site/util"
+	"nav-web-site/util/log"
+	"net/http"
+	"os"
+	"time"
 
 	_ "nav-web-site/docs" // 这里导入生成的docs文件
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -24,13 +30,13 @@ import (
 // @BasePath /api/v1
 func main() {
 
+	log.InitLoggers() // 初始化日志
+
 	config.InitConfig() // 初始化配置
 
-	util.InitLoggers() // 初始化日志
-
 	// 使用 InfoLogger 和 ErrorLogger 来记录日志
-	util.InfoLogger.Println("Starting the server...")
-	util.ErrorLogger.Println("This is an error log message test.")
+	log.InfoLogger.Println("Starting the server...")
+	log.ErrorLogger.Println("This is an error log message test.")
 
 	runMode := gin.ReleaseMode
 	if config.Config.Base.Debug {
@@ -42,9 +48,35 @@ func main() {
 	mydb.InitDB()
 	defer mydb.Db.Close() // 确保在程序结束时关闭数据库连接
 
+	// 启动定时任务检测 Goroutine
+	go startScheduledTaskChecker()
+
 	//定义路由
 	r := gin.Default()
 
+	// 添加请求日志中间件
+	r.Use(RequestLoggerMiddleware())
+
+	// 添加CORS中间件
+	// 从配置文件中读取 AllowOrigins
+	allowOrigins := config.Config.Base.AllowOrigins
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     allowOrigins, // 允许的前端域名
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Requested-With", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+	log.InfoLogger.Printf("CORS configuration: AllowOrigins: %v, AllowMethods: %v, AllowHeaders: %v, ExposeHeaders: %v, AllowCredentials: %v",
+		allowOrigins, []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, []string{"Origin", "Content-Type", "Authorization", "X-Requested-With", "Accept"}, []string{"Content-Length"}, true)
+	// 处理OPTIONS预检请求
+	r.OPTIONS("/*path", func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, X-Requested-With, Accept")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Status(http.StatusOK)
+	})
 	// Swagger 路由配置
 	r.GET("/swagger/*any", SwaggerAuthMiddleware(), ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// 图片获取模块组
@@ -306,11 +338,32 @@ func main() {
 		// @Router /news/delete/{id} [delete]
 		newsGroup.DELETE("/delete/:id", news.DeleteNews) // 删除新闻
 	}
+	// 如果上面的路由都没匹配到，就到指定目录（如：/www/wwwroot/nav/）的对应url路径下查找文件，如果有就返回文件内容，否则就报404
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		if path == "/" {
+			path = "/index.html"
+		}
+
+		filePath := config.Config.Base.BackendFilePath + path
+		log.InfoLogger.Printf("Requested file path: %s", filePath)
+		if _, err := os.Stat(filePath); err == nil {
+			http.ServeFile(c.Writer, c.Request, filePath)
+
+		} else {
+
+			c.JSON(404, gin.H{"message": "Page not found."})
+
+		}
+	})
 
 	// 默认路由处理
-	r.NoRoute(func(c *gin.Context) {
-		c.JSON(404, gin.H{"message": "Page not found"})
-	})
+	/*
+		r.NoRoute(func(c *gin.Context) {
+			c.JSON(404, gin.H{"message": "Page not found"})
+		})
+	*/
 
 	r.Run(":8080")
 }
@@ -325,5 +378,76 @@ func SwaggerAuthMiddleware() gin.HandlerFunc {
 			c.Header("WWW-Authenticate", `Basic realm="Restricted"`)
 			c.AbortWithStatus(401)
 		}
+	}
+}
+
+// RequestLoggerMiddleware 是一个中间件，用于记录每一次用户的请求
+func RequestLoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+
+		// 处理请求
+		c.Next()
+
+		// 记录请求日志
+		duration := time.Since(startTime)
+		userAgent := c.Request.UserAgent()
+		log.InfoLogger.Printf("Request: %s %s, Status: %d, Duration: %v, ClientIP: %s, User-Agent: %s",
+			c.Request.Method, c.Request.URL.Path, c.Writer.Status(), duration, c.ClientIP(), userAgent)
+	}
+}
+
+// 开始计划任务
+func startScheduledTaskChecker() {
+	c := cron.New()
+	for _, task := range config.Config.Tasks {
+		task := task                                                                           // 避免闭包问题
+		log.InfoLogger.Printf("Scheduling task %s with schedule %s", task.Type, task.Schedule) // 添加日志
+		_, err := c.AddFunc(task.Schedule, func() {
+			log.InfoLogger.Printf("Executing scheduled task %s", task.Type) // 添加日志
+			executeTask(task.Type)
+		})
+		if err != nil {
+			log.ErrorLogger.Printf("Error scheduling task %s: %v", task.Type, err)
+		}
+	}
+	c.Start()
+	log.InfoLogger.Println("Scheduled tasks started") // 添加日志
+}
+
+// 检测redis是否有任务
+func checkAndExecuteTasks() {
+	// 从redis查看有没有待执行的任务
+	keys, err := mydb.RedisClient.Keys(mydb.Ctx, "scheduled_task:*").Result()
+	if err != nil {
+		log.ErrorLogger.Println("Error fetching scheduled tasks:", err)
+		return
+	}
+
+	for _, key := range keys {
+		go executeTask(key)
+	}
+}
+
+// 按任务类型执行任务
+func executeTask(taskType string) {
+	log.InfoLogger.Printf("Starting task execution for %s", taskType)
+	defer func() {
+		if r := recover(); r != nil {
+			log.ErrorLogger.Printf("Task %s panicked: %v", taskType, r)
+		}
+	}()
+	switch taskType {
+	case "news163":
+		// 获取163的头条新闻
+		webcrawler.FetchAndStoreNews163()
+		log.InfoLogger.Println("Executing task news163")
+		// ... 任务代码 ...
+	case "type2":
+		// 执行类型2的任务
+		log.InfoLogger.Println("Executing task type2")
+		// ... 任务代码 ...
+	default:
+		log.ErrorLogger.Println("Unknown task type:", taskType)
 	}
 }

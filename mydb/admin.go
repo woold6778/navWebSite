@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"nav-web-site/config"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 )
 
 // StructAdmin 定义 admin 结构体
@@ -47,7 +48,7 @@ func (s *StructAdmin) Find(params QueryParams) (StructAdmin, error) {
 	}
 
 	if len(results) > 0 {
-		util.InfoLogger.Println("Processing result:", results[0])
+		log.InfoLogger.Println("Processing result:", results[0])
 		item, err = s.mapResultToStructItem(results[0])
 		if err != nil {
 			return item, util.WrapError(err, "将结果映射到StructAdmin时出错:")
@@ -68,16 +69,16 @@ func (s *StructAdmin) Select(params QueryParams) ([]StructAdmin, int, error) {
 
 	if len(results) > 0 {
 		for _, result := range results {
-			util.InfoLogger.Println("Processing result:", result)
+			log.InfoLogger.Println("Processing result:", result)
 
 			item, err := s.mapResultToStructItem(result)
 			if err != nil {
-				util.ErrorLogger.Println("将结果映射到StructAdmin时出错:", err)
+				log.ErrorLogger.Println("将结果映射到StructAdmin时出错:", err)
 				continue
 			}
 
 			list = append(list, item)
-			util.InfoLogger.Println("Appended to list:", list[len(list)-1])
+			log.InfoLogger.Println("Appended to list:", list[len(list)-1])
 		}
 	} else {
 		return list, 200, util.WrapError(fmt.Errorf("EmptyData"), "")

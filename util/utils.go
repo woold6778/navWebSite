@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/rand"
 	"nav-web-site/config"
+	"nav-web-site/util/log"
 	"net"
 	"net/http"
 	"reflect"
@@ -132,17 +133,17 @@ func ConvertSliceToMap[T any](slice []T, keyField string) (map[string]T, error) 
 
 // port是字符串类型，结构有可能是如（80,443）或者（80,433,8000-8010）或者（80）等，需要转换为[]string
 func ParsePortList(portStr string) []string {
-	InfoLogger.Println("Parsing port list from string:", portStr)
+	log.InfoLogger.Println("Parsing port list from string:", portStr)
 	var portList []string
 	portRanges := strings.Split(portStr, ",")
 	for _, portRange := range portRanges {
-		InfoLogger.Println("Processing port range:", portRange)
+		log.InfoLogger.Println("Processing port range:", portRange)
 		if strings.Contains(portRange, "-") {
 			ports := strings.Split(portRange, "-")
 			start, err1 := strconv.Atoi(ports[0])
 			end, err2 := strconv.Atoi(ports[1])
 			if err1 != nil || err2 != nil {
-				ErrorLogger.Println("Error parsing port range:", portRange, "Error:", err1, err2)
+				log.ErrorLogger.Println("Error parsing port range:", portRange, "Error:", err1, err2)
 				continue
 			}
 			for port := start; port <= end; port++ {
@@ -151,13 +152,13 @@ func ParsePortList(portStr string) []string {
 		} else {
 			port, err := strconv.Atoi(portRange)
 			if err != nil {
-				ErrorLogger.Println("Error parsing port:", portRange, "Error:", err)
+				log.ErrorLogger.Println("Error parsing port:", portRange, "Error:", err)
 				continue
 			}
 			portList = append(portList, strconv.Itoa(port))
 		}
 	}
-	InfoLogger.Println("Parsed port list:", portList)
+	log.InfoLogger.Println("Parsed port list:", portList)
 	return portList
 }
 

@@ -1673,6 +1673,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "图片URL",
+                        "name": "imgurl",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
                         "description": "描述",
                         "name": "description",
                         "in": "formData",
@@ -2466,6 +2472,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "图片URL",
+                        "name": "imgurl",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
                         "description": "描述",
                         "name": "description",
                         "in": "formData"
@@ -2776,6 +2788,13 @@ const docTemplate = `{
                 "summary": "上传图片",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "认证Token",
+                        "name": "LoginToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "type": "file",
                         "description": "图片文件",
                         "name": "file",
@@ -3046,6 +3065,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "imgurl": {
+                    "type": "string"
                 },
                 "is_headline": {
                     "description": "是否头条",

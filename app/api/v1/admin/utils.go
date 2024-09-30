@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 )
 
 // 通过login_token获取管理员ID
 func GetAdminIDFromToken(loginToken string) (int, error) {
 	cacheKey := "admin_login_token_" + loginToken
-	util.InfoLogger.Println("缓存Key:", cacheKey)
+	log.InfoLogger.Println("缓存Key:", cacheKey)
 	cacheValue, found := util.C.Get(cacheKey)
 	if !found {
 		return 0, fmt.Errorf("认证失败1")
@@ -31,7 +32,7 @@ func GetAdminIDFromToken(loginToken string) (int, error) {
 // GetTokenContent 获取token的内容
 func GetTokenContent(loginToken string) (map[string]interface{}, error) {
 	cacheKey := "admin_login_token_" + loginToken
-	util.InfoLogger.Println("缓存Key:", cacheKey)
+	log.InfoLogger.Println("缓存Key:", cacheKey)
 	cacheValue, found := util.C.Get(cacheKey)
 	if !found {
 		return nil, fmt.Errorf("认证失败2")

@@ -10,6 +10,9 @@
     go get -u github.com/swaggo/gin-swagger
     go get -u github.com/swaggo/files
     go get -u github.com/swaggo/swag
+    go get -u github.com/PuerkitoBio/goquery
+    go get github.com/robfig/cron/v3
+    go get github.com/gin-contrib/cors
 
 自动生成api文档
     安装 swag 工具

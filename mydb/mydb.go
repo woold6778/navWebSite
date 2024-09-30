@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	"nav-web-site/config"
-	"nav-web-site/util"
 	"time"
 
+	"nav-web-site/util/log"
+
 	"github.com/go-redis/redis/v8"
+
 	// 添加 MySQL 驱动
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -44,12 +46,12 @@ func InitDB() {
 		config.Config.MySQL.Database,
 	))
 	if err != nil {
-		util.ErrorLogger.Fatalf("Failed to connect to database: %v", err)
+		log.ErrorLogger.Fatalf("Failed to connect to database: %v", err)
 	}
-	util.InfoLogger.Println("Database connection successful")
+	log.InfoLogger.Println("Database connection successful")
 
 	if Db == nil {
-		util.ErrorLogger.Println("Database connection is nil")
+		log.ErrorLogger.Println("Database connection is nil")
 	}
 
 	// 设置数据库连接池参数
@@ -66,6 +68,6 @@ func InitDB() {
 	// 测试redis连接
 	_, redis_err := RedisClient.Ping(Ctx).Result()
 	if redis_err != nil {
-		util.ErrorLogger.Fatalf("Could not connect to Redis: %v", redis_err)
+		log.ErrorLogger.Fatalf("Could not connect to Redis: %v", redis_err)
 	}
 }

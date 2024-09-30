@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"nav-web-site/app/api/v1/admin"
-	"nav-web-site/util"
+	"nav-web-site/util/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,16 +25,28 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// 检查 logintoken 是否存在并且有效
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing logintoken"})
-			c.Abort() // 终止请求
+			log.InfoLogger.Printf("Missing logintoken: %s %s, ClientIP: %s",
+				c.Request.Method, c.Request.URL.Path, c.ClientIP())
+			c.AbortWithStatus(http.StatusForbidden)
 			return
+			/*
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing logintoken"})
+				c.Abort() // 终止请求
+				return
+			*/
 		}
 
 		isValid, errMsg := isValidToken(c, token)
 		if !isValid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid logintoken: " + errMsg})
-			c.Abort() // 终止请求
+			log.InfoLogger.Printf("Invalid logintoken:%s %s %s, ClientIP: %s", errMsg,
+				c.Request.Method, c.Request.URL.Path, c.ClientIP())
+			c.AbortWithStatus(http.StatusForbidden)
 			return
+			/*
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid logintoken: " + errMsg})
+				c.Abort() // 终止请求
+				return
+			*/
 		}
 
 		// 如果 token 有效，继续处理请求
@@ -48,7 +60,7 @@ func isValidToken(c *gin.Context, token string) (bool, string) {
 	if err != nil {
 		return false, err.Error()
 	}
-	util.InfoLogger.Println(tokenContent)
+	log.InfoLogger.Println(tokenContent)
 
 	// 获取请求的客户端IP、User-Agent和设备指纹
 	clientIP := c.ClientIP()

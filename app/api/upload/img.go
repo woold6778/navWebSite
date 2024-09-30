@@ -6,6 +6,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
 	"net/http"
@@ -28,11 +29,23 @@ type ImgReturnData struct {
 // @Tags upload
 // @Accept multipart/form-data
 // @Produce application/json
+// @Param LoginToken header string true "认证Token"
 // @Param file formData file true "图片文件"
 // @Success 200 {object} util.APIResponse{code=int,message=string,data=ImgReturnData}
 // @Failure 400 {object} util.APIResponse{code=int,message=string,data=object}
 // @Router /upload/image [post]
 func UploadImage(c *gin.Context) {
+	loginToken := c.GetHeader("LoginToken")
+	adminID, err := admin.GetAdminIDFromToken(loginToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无权限上传图片", Data: err.Error()})
+		return
+	}
+	if adminID < 0 {
+		c.JSON(http.StatusUnauthorized, util.APIResponse{Code: http.StatusUnauthorized, Message: "无效的管理员ID", Data: "null"})
+		return
+	}
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, util.APIResponse{Code: http.StatusBadRequest, Message: "获取文件失败", Data: "null"})

@@ -3,8 +3,10 @@ package admin
 import (
 	"encoding/json"
 	"fmt"
+	"nav-web-site/config"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -33,15 +35,22 @@ type LoginSuccessData struct {
 // @Failure 500 {object} util.APIResponse{code=int,message=string,data=object} "查询管理员信息失败"
 // @Router /admin/login [post]
 func Login(c *gin.Context) {
+	// 记录接收到的请求
+	log.InfoLogger.Printf("Received login request - Username: %s, ClientIP: %s, User-Agent: %s", c.PostForm("username"), c.ClientIP(), c.Request.UserAgent())
 
 	//接收用户名和密码，从mydb.TAbleS.Admind的Find函数进行查询(用户名作为查询条件)
 	username := c.PostForm("username")
 	password := c.PostForm("password")
+	if username == "" || password == "" {
+		c.JSON(http.StatusBadRequest, util.APIResponse{Code: http.StatusBadRequest, Message: "用户名和密码是必须的", Data: "null"})
+		return
+	}
 
 	// 创建查询参数
 	params := mydb.QueryParams{
 		Condition: "username='" + username + "'",
 	}
+	log.InfoLogger.Printf("Received login request - Username: %s, ClientIP: %s", username, c.ClientIP())
 
 	// 查询管理员信息
 	admin, err := mydb.Tables.Admin.Find(params)
@@ -95,7 +104,7 @@ func Login(c *gin.Context) {
 
 	util.C.Set(cacheKey, cacheValue, cacheDuration)
 
-	c.SetCookie("session_id", login_token, int(cacheDuration.Seconds()), "/", "yourdomain.com", false, true)
+	c.SetCookie("session_id", login_token, int(cacheDuration.Seconds()), "/", config.Config.Base.SiteDomain, false, true)
 	// 返回登录凭证
 	data := LoginSuccessData{Username: admin.Username, Token: login_token}
 

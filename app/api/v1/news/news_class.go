@@ -4,6 +4,7 @@ import (
 	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 	"net/http"
 	"strconv"
 
@@ -60,7 +61,7 @@ func AddClass(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "添加新闻分类失败", Data: err.Error()})
 		return
 	}
-	util.InfoLogger.Printf("新闻分类添加成功,id=%d,添加记录数:%d", id, rowsAffected)
+	log.InfoLogger.Printf("新闻分类添加成功,id=%d,添加记录数:%d", id, rowsAffected)
 
 	c.JSON(http.StatusOK, util.APIResponse{Code: http.StatusOK, Message: "新闻分类添加成功"})
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"nav-web-site/config"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 	"reflect"
 	"strings"
 )
@@ -65,8 +66,8 @@ func GenericSelect(db *sql.DB, tableName string, params QueryParams, tablePrefix
 		}
 	}
 
-	// 使用util.InfoLogger写入日志
-	util.InfoLogger.Println("Constructed Query:", query)
+	// 使用log.InfoLogger写入日志
+	log.InfoLogger.Println("Constructed Query:", query)
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -163,7 +164,7 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		// 检查是否已存在相同的记录
 		uniqueFieldGetter, ok := interface{}(v).(UniqueFieldGetter)
 		if !ok {
-			util.ErrorLogger.Println("类型转换失败: 无法将", v, "转换为UniqueFieldGetter")
+			log.ErrorLogger.Println("类型转换失败: 无法将", v, "转换为UniqueFieldGetter")
 		} else {
 			uniqueFields := uniqueFieldGetter.GetUniqueFields()
 			if len(uniqueFields) > 0 {
@@ -197,7 +198,7 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		insertedIDs = append(insertedIDs, nextID) //返回的ID列表
 	}
 
-	util.InfoLogger.Println("移除nil值前的interfaceDatas:", interfaceDatas)
+	log.InfoLogger.Println("移除nil值前的interfaceDatas:", interfaceDatas)
 	// 移除interfaceDatas中的nil值
 	validInterfaceDatas := make([]interface{}, 0)
 	for _, data := range interfaceDatas {
@@ -206,13 +207,13 @@ func GenericInsert[T any](tableName string, datas []T, requiredFields []string, 
 		}
 	}
 	interfaceDatas = validInterfaceDatas
-	util.InfoLogger.Println("interfaceDatas的内容:", interfaceDatas)
+	log.InfoLogger.Println("interfaceDatas的内容:", interfaceDatas)
 	sql, valueArgs, err := GenerateInsertSQL(fullTableName, interfaceDatas, tableColumns)
 	if err != nil {
 		return 0, nil, util.WrapError(err, "生成SQL失败:")
 	}
 
-	util.InfoLogger.Println("生成的SQL语句:", sql)
+	log.InfoLogger.Println("生成的SQL语句:", sql)
 
 	// 执行SQL语句
 	result, err := Db.Exec(sql, valueArgs...)
@@ -252,7 +253,7 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 	if err != nil {
 		return 0, nil, util.WrapError(err, "获取数据库表格字段名失败:")
 	}
-	util.InfoLogger.Println("数据表"+fullTableName+"字段名列表:", tableColumns)
+	log.InfoLogger.Println("数据表"+fullTableName+"字段名列表:", tableColumns)
 
 	// 将数据转换为 []interface{}
 	interfaceDatas := interfaceSlice(datas)
@@ -282,7 +283,7 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 			}
 		}
 	}
-	util.InfoLogger.Println("更新数据字段列表:", columns)
+	log.InfoLogger.Println("更新数据字段列表:", columns)
 
 	// 生成更新SQL
 	var setClauses []string
@@ -293,7 +294,7 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 			val = val.Elem()
 		}
 
-		util.InfoLogger.Printf("val的内容: %+v\n", val.Interface())
+		log.InfoLogger.Printf("val的内容: %+v\n", val.Interface())
 
 		var setClause []string
 		for _, column := range columns {
@@ -307,10 +308,10 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 				}
 			}
 			if !fieldValue.IsValid() {
-				util.ErrorLogger.Printf("字段 %s 无效\n", column)
+				log.ErrorLogger.Printf("字段 %s 无效\n", column)
 				continue
 			}
-			util.InfoLogger.Printf("字段: %s, 值: %v\n", column, fieldValue.Interface())
+			log.InfoLogger.Printf("字段: %s, 值: %v\n", column, fieldValue.Interface())
 			setClause = append(setClause, fmt.Sprintf("%s = ?", column))
 			valueArgs = append(valueArgs, fieldValue.Interface())
 		}
@@ -321,7 +322,7 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 
 	if len(setClauses) == 0 {
 		err := fmt.Errorf("没有有效的字段用于更新")
-		util.ErrorLogger.Println("生成的Update SQL语句失败:", err)
+		log.ErrorLogger.Println("生成的Update SQL语句失败:", err)
 		return 0, nil, util.WrapError(err, "生成的Update SQL语句失败:")
 	}
 
@@ -331,7 +332,7 @@ func GenericUpdate[T any](tableName string, datas []T, condition string, tablePr
 		condition)
 
 	// 打印生成的SQL语句
-	util.InfoLogger.Println("生成的Update SQL语句:", updateSQL)
+	log.InfoLogger.Println("生成的Update SQL语句:", updateSQL)
 
 	// 执行SQL语句
 	result, err := Db.Exec(updateSQL, valueArgs...)
@@ -377,7 +378,7 @@ func GenericDelete(tableName string, condition string, tablePrefix string, table
 	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s", fullTableName, condition)
 
 	// 打印生成的SQL语句
-	util.InfoLogger.Println("生成的Delete SQL语句:", deleteSQL)
+	log.InfoLogger.Println("生成的Delete SQL语句:", deleteSQL)
 
 	// 执行SQL语句
 	result, err := Db.Exec(deleteSQL)

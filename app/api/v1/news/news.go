@@ -7,6 +7,7 @@ import (
 	"nav-web-site/app/api/v1/admin"
 	"nav-web-site/mydb"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,7 @@ import (
 // @Param title formData string true "标题"
 // @Param subtitle formData string false "副标题"
 // @Param url formData string false "链接"
+// @Param imgurl formData string false "图片URL"
 // @Param description formData string true "描述"
 // @Param icon formData string false "图标"
 // @Param keywords formData string false "关键词"
@@ -55,6 +57,7 @@ func AddNews(c *gin.Context) {
 	news.Title = c.PostForm("title")
 	news.Subtitle = c.PostForm("subtitle")
 	news.Url = c.PostForm("url")
+	news.Imgurl = c.PostForm("imgurl")
 	news.Description = c.PostForm("description")
 	news.Icon = c.PostForm("icon")
 	news.Keywords = c.PostForm("keywords")
@@ -75,7 +78,7 @@ func AddNews(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "添加新闻失败", Data: err.Error()})
 		return
 	}
-	util.InfoLogger.Printf("新闻添加成功,标题=“%s”,id=%d,添加记录数:%d", news.Title, id, rowsAffected)
+	log.InfoLogger.Printf("新闻添加成功,标题=“%s”,id=%d,添加记录数:%d", news.Title, id, rowsAffected)
 
 	c.JSON(http.StatusOK, util.APIResponse{Code: http.StatusOK, Message: "新闻添加成功", Data: "ok"})
 }
@@ -92,6 +95,7 @@ func AddNews(c *gin.Context) {
 // @Param title formData string true "标题"
 // @Param subtitle formData string false "副标题"
 // @Param url formData string false "链接地址"
+// @Param imgurl formData string false "图片URL"
 // @Param description formData string false "描述"
 // @Param icon formData string false "图标"
 // @Param keywords formData string false "关键词"
@@ -140,6 +144,9 @@ func UpdateNews(c *gin.Context) {
 	}
 	if c.PostForm("url") != "" {
 		news.Url = c.PostForm("url")
+	}
+	if c.PostForm("imgurl") != "" {
+		news.Imgurl = c.PostForm("imgurl")
 	}
 	if c.PostForm("description") != "" {
 		news.Description = c.PostForm("description")
@@ -246,7 +253,7 @@ func GetNewsDetail(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIResponse{Code: http.StatusInternalServerError, Message: "获取新闻详情失败", Data: err.Error()})
 		return
 	}
-	util.InfoLogger.Println("获取的新闻详情:", news)
+	log.InfoLogger.Println("获取的新闻详情:", news)
 
 	c.JSON(http.StatusOK, util.APIResponse{Code: http.StatusOK, Message: "获取新闻详情成功", Data: news})
 }

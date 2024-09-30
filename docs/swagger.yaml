@@ -149,6 +149,8 @@ definitions:
         type: string
       id:
         type: integer
+      imgurl:
+        type: string
       is_headline:
         description: 是否头条
         type: boolean
@@ -1239,6 +1241,10 @@ paths:
         in: formData
         name: url
         type: string
+      - description: 图片URL
+        in: formData
+        name: imgurl
+        type: string
       - description: 描述
         in: formData
         name: description
@@ -1715,6 +1721,10 @@ paths:
         in: formData
         name: url
         type: string
+      - description: 图片URL
+        in: formData
+        name: imgurl
+        type: string
       - description: 描述
         in: formData
         name: description
@@ -1907,6 +1917,11 @@ paths:
       - multipart/form-data
       description: 上传图片文件
       parameters:
+      - description: 认证Token
+        in: header
+        name: LoginToken
+        required: true
+        type: string
       - description: 图片文件
         in: formData
         name: file

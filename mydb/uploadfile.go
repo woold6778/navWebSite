@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"nav-web-site/config"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 )
 
 type StructUploadFile struct {
@@ -74,16 +75,16 @@ func (s *StructUploadFile) Select(params QueryParams) ([]StructUploadFile, int, 
 
 	if len(results) > 0 {
 		for _, result := range results {
-			util.InfoLogger.Println("Processing result:", result)
+			log.InfoLogger.Println("Processing result:", result)
 
 			item, err := s.mapResultToStructItem(result)
 			if err != nil {
-				util.ErrorLogger.Println("将结果映射到StructUploadFile时出错:", err)
+				log.ErrorLogger.Println("将结果映射到StructUploadFile时出错:", err)
 				continue
 			}
 
 			list = append(list, item)
-			util.InfoLogger.Println("Appended to list:", list[len(list)-1])
+			log.InfoLogger.Println("Appended to list:", list[len(list)-1])
 		}
 	} else {
 		return list, 200, util.WrapError(fmt.Errorf("EmptyData"), "")

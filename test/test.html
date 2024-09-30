@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>登录测试</title>
+</head>
+<body>
+    <h2>登录测试</h2>
+    <form id="loginForm">
+        <label for="username">用户名:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">密码:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <label for="expiry">过期时间:</label>
+        <input type="text" id="expiry" name="expiry" required><br><br>
+        <button type="button" onclick="login()">登录</button>
+    </form>
+
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const expiry = document.getElementById('expiry').value;
+
+            const data = new URLSearchParams();
+            data.append('username', username);
+            data.append('password', password);
+            data.append('expiration', expiry);
+
+            fetch('/api/v1/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('登录成功');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('登录失败');
+            });
+        }
+    </script>
+</body>
+</html>

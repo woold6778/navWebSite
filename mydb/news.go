@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"nav-web-site/config"
 	"nav-web-site/util"
+	"nav-web-site/util/log"
 )
 
 // StructNews 定义 news 结构体
@@ -14,6 +15,7 @@ type StructNews struct {
 	Title          string `db:"title"`
 	Subtitle       string `db:"subtitle"`
 	Url            string `db:"url"`
+	Imgurl         string `db:"imgurl"`
 	Description    string `db:"description"`
 	Icon           string `db:"icon"`
 	Keywords       string `db:"keywords"`
@@ -111,16 +113,16 @@ func (s *StructNews) Select(params QueryParams) ([]StructNews, int, error) {
 
 	if len(results) > 0 {
 		for _, result := range results {
-			util.InfoLogger.Println("Processing result:", result)
+			log.InfoLogger.Println("Processing result:", result)
 
 			item, err := s.mapResultToStructItem(result)
 			if err != nil {
-				util.ErrorLogger.Println("将结果映射到StructNews时出错:", err)
+				log.ErrorLogger.Println("将结果映射到StructNews时出错:", err)
 				continue
 			}
 
 			list = append(list, item)
-			util.InfoLogger.Println("Appended to list:", list[len(list)-1])
+			log.InfoLogger.Println("Appended to list:", list[len(list)-1])
 		}
 	} else {
 		return list, 200, util.WrapError(fmt.Errorf("EmptyData"), "")
@@ -293,6 +295,10 @@ func (s *StructNews) mapResultToStructItem(result map[string]interface{}) (Struc
 
 	if item.Url, ok = result["url"].(string); !ok {
 		return item, util.WrapError(fmt.Errorf("错误：无法将url转换为string：%v", result["url"]), "")
+	}
+
+	if item.Imgurl, ok = result["imgurl"].(string); !ok {
+		return item, util.WrapError(fmt.Errorf("错误：无法将imgurl转换为string：%v", result["imgurl"]), "")
 	}
 
 	if item.Description, ok = result["description"].(string); !ok {
