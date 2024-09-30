@@ -12,6 +12,7 @@ import (
 	"nav-web-site/util/log"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	_ "nav-web-site/docs" // 这里导入生成的docs文件
@@ -434,7 +435,8 @@ func executeTask(taskType string) {
 	log.InfoLogger.Printf("Starting task execution for %s", taskType)
 	defer func() {
 		if r := recover(); r != nil {
-			log.ErrorLogger.Printf("Task %s panicked: %v", taskType, r)
+			_, file, line, _ := runtime.Caller(1)
+			log.ErrorLogger.Printf("Task %s panicked at %s:%d: %v", taskType, file, line, r)
 		}
 	}()
 	switch taskType {
