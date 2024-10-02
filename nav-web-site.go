@@ -435,14 +435,20 @@ func executeTask(taskType string) {
 	log.InfoLogger.Printf("Starting task execution for %s", taskType)
 	defer func() {
 		if r := recover(); r != nil {
-			_, file, line, _ := runtime.Caller(1)
-			log.ErrorLogger.Printf("Task %s panicked at %s:%d: %v", taskType, file, line, r)
+			// 获取调用栈信息
+			buf := make([]byte, 1<<16)
+			stackSize := runtime.Stack(buf, false)
+			stackTrace := string(buf[0:stackSize])
+
+			// 获取真正的报错文件和行号
+			_, file, line, _ := runtime.Caller(2)
+			log.ErrorLogger.Printf("Task %s panicked at %s:%d: %v\nStack trace:\n%s", taskType, file, line, r, stackTrace)
 		}
 	}()
 	switch taskType {
 	case "news163":
 		// 获取163的头条新闻
-		webcrawler.FetchAndStoreNews163()
+		webcrawler.FetchAndStoreNews163V2()
 		log.InfoLogger.Println("Executing task news163")
 		// ... 任务代码 ...
 	case "type2":
